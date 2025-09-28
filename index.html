@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Faixa de Gaza - Calculadora by Cássio Medeiros</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-bottom: 140px;
+    }
+    h2 {
+      width: 100%;
+      padding: 10px 0;
+      margin: 0;
+      border-bottom: 2px solid #ccc;
+      text-align: center;
+      font-size: 17px;
+      background-color: #000066;
+      color: #fff;
+      margin-top: 8px;
+    }
+    .produto {
+      width: 100%;
+      padding: 10px 0;
+      margin: 0;
+      border-bottom: 1px solid #ccc;
+      text-align: center;
+      background-color: #ddd;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .produto span.nome {
+      display: block;
+      font-weight: bold;
+      font-size: 17px;
+      color: #222;
+    }
+    .produto span.preco {
+      display: block;
+      font-size: 14px;
+      color: #666;
+      margin-top: 5px;
+    }
+    .produto.selecionado {
+      background-color: #00bfff;
+      color: white;
+    }
+    .produto.selecionado span.preco {
+      color: #f0f0f0;
+    }
+    #quantidade-container {
+      margin: 15px;
+      text-align: center;
+    }
+    #quantidade {
+      font-size: 18px;
+      padding: 5px;
+      width: 80px;
+      text-align: center;
+    }
+    #adicionar, #resetar {
+      margin: 5px;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    #adicionar {
+      background: green;
+      color: white;
+    }
+    #resetar {
+      background: red;
+      color: white;
+    }
+    #carrinho {
+      width: 90%;
+      margin: 15px auto;
+      padding: 10px;
+      background: #fff;
+      border: 1px solid #ccc;
+      font-size: 15px;
+    }
+    #carrinho ul {
+      padding-left: 20px;
+    }
+    #visor {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      font-size: 22px;
+      font-weight: bold;
+    }
+    #desconto {
+      background-color: #007bff;
+      color: white;
+      display: block;
+      padding: 12px 0;
+      font-size: 20px;
+    }
+    #total {
+      background-color: #32cd32;
+      color: white;
+      display: block;
+      padding: 15px 0;
+      font-size: 22px;
+    }
+  </style>
+</head>
+<body>
+  <p style="text-align: center;">Desenvolvido por: Cássio Medeiros </br>Doações, PIX E-mail: pix@cassiomedeiros.com.br</p>
+
+  <h2>ESCOLHA O PRODUTO</h2>
+
+  <div id="quantidade-container">
+    Quantidade: <input type="number" id="quantidade" min="1" value="1">
+    <button id="adicionar">Adicionar ao Carrinho</button>
+    <button id="resetar">Resetar</button>
+  </div>
+
+  <!-- Cada produto agora tem os dois valores: sem e com parceria -->
+  <div class="produto" data-tipo="fixo" data-nome="LSD" data-sem="650" data-com="600">
+    <span class="nome">LSD</span><span class="preco">R$ 650,00 com parceria | R$ 600,00 sem parceria</span>
+  </div>
+  <div class="produto" data-tipo="fixo" data-nome="Bancada de Droga" data-sem="6500" data-com="6000">
+    <span class="nome">Bancada de Droga</span><span class="preco">R$ 6.500,00 com parceria | R$ 6.000,00 sem parceria</span>
+  </div>
+  <div class="produto" data-tipo="percentual" data-nome="Lavagem de dinheiro" data-sem="70" data-com="75">
+    <span class="nome">Lavagem de dinheiro</span><span class="preco">30% com parceria | 25% sem parceria</span>
+  </div>
+  <div class="produto" data-tipo="percentual" data-nome="Secagem de dinheiro" data-sem="75" data-com="80">
+    <span class="nome">Secagem de dinheiro</span><span class="preco">25% com parceria | 20% sem parceria</span>
+  </div>
+
+  <div id="carrinho">
+    <strong>Itens no Carrinho:</strong>
+    <ul id="lista-carrinho"></ul>
+  </div>
+
+  <div id="visor">
+    <span id="desconto">COM PARCERIA: R$ 0,00</span>
+    <span id="total">SEM PARCERIA: R$ 0,00</span>
+  </div>
+
+  <script>
+    const produtos = document.querySelectorAll('.produto');
+    const descontoSpan = document.getElementById('desconto');
+    const totalSpan = document.getElementById('total');
+    const quantidadeInput = document.getElementById('quantidade');
+    const listaCarrinho = document.getElementById('lista-carrinho');
+    const btnAdicionar = document.getElementById('adicionar');
+    const btnResetar = document.getElementById('resetar');
+
+    let produtoSelecionado = null;
+    let carrinho = [];
+
+    // Selecionar produto
+    produtos.forEach(produto => {
+      produto.addEventListener('click', () => {
+        produtos.forEach(p => p.classList.remove('selecionado'));
+        produto.classList.add('selecionado');
+        produtoSelecionado = produto;
+      });
+    });
+
+    // Adicionar ao carrinho
+    btnAdicionar.addEventListener('click', () => {
+      if (!produtoSelecionado) return alert('Selecione um produto primeiro!');
+      const nome = produtoSelecionado.dataset.nome;
+      const tipo = produtoSelecionado.dataset.tipo;
+      const sem = parseFloat(produtoSelecionado.dataset.sem);
+      const com = parseFloat(produtoSelecionado.dataset.com);
+      const quantidade = parseInt(quantidadeInput.value) || 1;
+
+      carrinho.push({ nome, tipo, sem, com, quantidade });
+      atualizarCarrinho();
+    });
+
+    // Resetar a calculadora
+    btnResetar.addEventListener('click', () => {
+      carrinho = [];
+      produtoSelecionado = null;
+      produtos.forEach(p => p.classList.remove('selecionado'));
+      listaCarrinho.innerHTML = '';
+      descontoSpan.innerText = 'COM PARCERIA: R$ 0,00';
+      totalSpan.innerText = 'SEM PARCERIA: R$ 0,00';
+      quantidadeInput.value = 1;
+    });
+
+    function atualizarCarrinho() {
+      listaCarrinho.innerHTML = '';
+      let totalSem = 0;
+      let totalCom = 0;
+
+      carrinho.forEach(item => {
+        let subtotalSem = 0;
+        let subtotalCom = 0;
+
+        if (item.tipo === "fixo") {
+          subtotalSem = item.sem * item.quantidade;
+          subtotalCom = item.com * item.quantidade;
+        } else if (item.tipo === "percentual") {
+          // quantidade = valor base
+          subtotalSem = (item.quantidade * item.sem) / 100;
+          subtotalCom = (item.quantidade * item.com) / 100;
+        }
+
+        totalSem += subtotalSem;
+        totalCom += subtotalCom;
+
+        const li = document.createElement('li');
+        li.innerText = `${item.quantidade}x ${item.nome} = R$ ${subtotalSem.toLocaleString('pt-BR',{minimumFractionDigits:2})} | Com parceria: R$ ${subtotalCom.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+        listaCarrinho.appendChild(li);
+      });
+
+      descontoSpan.innerText = 'COM PARCERIA: R$ ' + totalCom.toLocaleString('pt-BR',{minimumFractionDigits:2});
+      totalSpan.innerText = 'SEM PARCERIA: R$ ' + totalSem.toLocaleString('pt-BR',{minimumFractionDigits:2});
+    }
+  </script>
+</body>
+</html>
