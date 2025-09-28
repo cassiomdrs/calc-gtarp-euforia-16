@@ -120,10 +120,10 @@
 <body>
   <p style="text-align: center;">Desenvolvido por: Cássio Medeiros </br>Doações, PIX E-mail: pix@cassiomedeiros.com.br</p>
 
-  <h2>ESCOLHA O PRODUTO</h2>
+  <h2>EUFORIA - FAIXA DE GAZA (FAC 16)</h2>
 
   <div id="quantidade-container">
-    Quantidade: <input type="number" id="quantidade" min="1" value="1">
+    Quantidade: <input type="text" id="quantidade" value="1" style="width: 300px; max-width: 100%;"></br>
     <button id="adicionar">Adicionar ao Carrinho</button>
     <button id="resetar">Resetar</button>
   </div>
@@ -153,79 +153,99 @@
   </div>
 
   <script>
-    const produtos = document.querySelectorAll('.produto');
-    const descontoSpan = document.getElementById('desconto');
-    const totalSpan = document.getElementById('total');
-    const quantidadeInput = document.getElementById('quantidade');
-    const listaCarrinho = document.getElementById('lista-carrinho');
-    const btnAdicionar = document.getElementById('adicionar');
-    const btnResetar = document.getElementById('resetar');
+  const produtos = document.querySelectorAll('.produto');
+  const descontoSpan = document.getElementById('desconto');
+  const totalSpan = document.getElementById('total');
+  const quantidadeInput = document.getElementById('quantidade');
+  const listaCarrinho = document.getElementById('lista-carrinho');
+  const btnAdicionar = document.getElementById('adicionar');
+  const btnResetar = document.getElementById('resetar');
 
-    let produtoSelecionado = null;
-    let carrinho = [];
+  let produtoSelecionado = null;
+  let carrinho = [];
 
-    // Selecionar produto
-    produtos.forEach(produto => {
-      produto.addEventListener('click', () => {
-        produtos.forEach(p => p.classList.remove('selecionado'));
-        produto.classList.add('selecionado');
-        produtoSelecionado = produto;
-      });
-    });
+  // Função para formatar números com separadores
+  function formatarNumero(num) {
+    return num.toLocaleString('pt-BR');
+  }
 
-    // Adicionar ao carrinho
-    btnAdicionar.addEventListener('click', () => {
-      if (!produtoSelecionado) return alert('Selecione um produto primeiro!');
-      const nome = produtoSelecionado.dataset.nome;
-      const tipo = produtoSelecionado.dataset.tipo;
-      const sem = parseFloat(produtoSelecionado.dataset.sem);
-      const com = parseFloat(produtoSelecionado.dataset.com);
-      const quantidade = parseInt(quantidadeInput.value) || 1;
-
-      carrinho.push({ nome, tipo, sem, com, quantidade });
-      atualizarCarrinho();
-    });
-
-    // Resetar a calculadora
-    btnResetar.addEventListener('click', () => {
-      carrinho = [];
-      produtoSelecionado = null;
-      produtos.forEach(p => p.classList.remove('selecionado'));
-      listaCarrinho.innerHTML = '';
-      descontoSpan.innerText = 'COM PARCERIA: R$ 0,00';
-      totalSpan.innerText = 'SEM PARCERIA: R$ 0,00';
-      quantidadeInput.value = 1;
-    });
-
-    function atualizarCarrinho() {
-      listaCarrinho.innerHTML = '';
-      let totalSem = 0;
-      let totalCom = 0;
-
-      carrinho.forEach(item => {
-        let subtotalSem = 0;
-        let subtotalCom = 0;
-
-        if (item.tipo === "fixo") {
-          subtotalSem = item.sem * item.quantidade;
-          subtotalCom = item.com * item.quantidade;
-        } else if (item.tipo === "percentual") {
-          // quantidade = valor base
-          subtotalSem = (item.quantidade * item.sem) / 100;
-          subtotalCom = (item.quantidade * item.com) / 100;
-        }
-
-        totalSem += subtotalSem;
-        totalCom += subtotalCom;
-
-        const li = document.createElement('li');
-        li.innerText = `${item.quantidade}x ${item.nome} = R$ ${subtotalSem.toLocaleString('pt-BR',{minimumFractionDigits:2})} | Com parceria: R$ ${subtotalCom.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
-        listaCarrinho.appendChild(li);
-      });
-
-      descontoSpan.innerText = 'COM PARCERIA: R$ ' + totalCom.toLocaleString('pt-BR',{minimumFractionDigits:2});
-      totalSpan.innerText = 'SEM PARCERIA: R$ ' + totalSem.toLocaleString('pt-BR',{minimumFractionDigits:2});
+  // Formatar enquanto digita no campo de quantidade
+  quantidadeInput.addEventListener('input', () => {
+    let valor = quantidadeInput.value.replace(/\D/g, ''); // remove não numéricos
+    if (valor) {
+      quantidadeInput.value = formatarNumero(parseInt(valor));
+    } else {
+      quantidadeInput.value = '';
     }
-  </script>
+  });
+
+  // Pegar valor real do campo (sem pontos)
+  function getQuantidade() {
+    let valor = quantidadeInput.value.replace(/\D/g, '');
+    return parseInt(valor) || 1;
+  }
+
+  // Selecionar produto
+  produtos.forEach(produto => {
+    produto.addEventListener('click', () => {
+      produtos.forEach(p => p.classList.remove('selecionado'));
+      produto.classList.add('selecionado');
+      produtoSelecionado = produto;
+    });
+  });
+
+  // Adicionar ao carrinho
+  btnAdicionar.addEventListener('click', () => {
+    if (!produtoSelecionado) return alert('Selecione um produto primeiro!');
+    const nome = produtoSelecionado.dataset.nome;
+    const tipo = produtoSelecionado.dataset.tipo;
+    const sem = parseFloat(produtoSelecionado.dataset.sem);
+    const com = parseFloat(produtoSelecionado.dataset.com);
+    const quantidade = getQuantidade();
+
+    carrinho.push({ nome, tipo, sem, com, quantidade });
+    atualizarCarrinho();
+  });
+
+  // Resetar a calculadora
+  btnResetar.addEventListener('click', () => {
+    carrinho = [];
+    produtoSelecionado = null;
+    produtos.forEach(p => p.classList.remove('selecionado'));
+    listaCarrinho.innerHTML = '';
+    descontoSpan.innerText = 'COM PARCERIA: R$ 0,00';
+    totalSpan.innerText = 'SEM PARCERIA: R$ 0,00';
+    quantidadeInput.value = '1';
+  });
+
+  function atualizarCarrinho() {
+    listaCarrinho.innerHTML = '';
+    let totalSem = 0;
+    let totalCom = 0;
+
+    carrinho.forEach(item => {
+      let subtotalSem = 0;
+      let subtotalCom = 0;
+
+      if (item.tipo === "fixo") {
+        subtotalSem = item.sem * item.quantidade;
+        subtotalCom = item.com * item.quantidade;
+      } else if (item.tipo === "percentual") {
+        subtotalSem = (item.quantidade * item.sem) / 100;
+        subtotalCom = (item.quantidade * item.com) / 100;
+      }
+
+      totalSem += subtotalSem;
+      totalCom += subtotalCom;
+
+      const li = document.createElement('li');
+      li.innerText = `${formatarNumero(item.quantidade)}x ${item.nome} = R$ ${subtotalSem.toLocaleString('pt-BR',{minimumFractionDigits:2})} | Com parceria: R$ ${subtotalCom.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+      listaCarrinho.appendChild(li);
+    });
+
+    descontoSpan.innerText = 'COM PARCERIA: R$ ' + totalCom.toLocaleString('pt-BR',{minimumFractionDigits:2});
+    totalSpan.innerText = 'SEM PARCERIA: R$ ' + totalSem.toLocaleString('pt-BR',{minimumFractionDigits:2});
+  }
+</script>
 </body>
 </html>
